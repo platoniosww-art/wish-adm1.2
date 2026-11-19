@@ -1,0 +1,2135 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Wishlist Owner Console v2 — Панель владельца сервиса</title>
+  <style>
+    :root, [data-theme="dark"] {
+      --bg: #090A0D;
+      --bg-elevated: rgba(16, 18, 24, 0.88);
+      --card: #12141C;
+      --card-subtle: #191C27;
+      --card-hover: #1F2330;
+      --text: #F4F5F8;
+      --text-secondary: #9CA3B4;
+      --text-tertiary: #687084;
+      --accent: #FF2D55;
+      --accent-soft: rgba(255, 45, 85, 0.14);
+      --blue: #3B82F6;
+      --blue-soft: rgba(59, 130, 246, 0.14);
+      --green: #22C55E;
+      --green-soft: rgba(34, 197, 94, 0.14);
+      --amber: #F59E0B;
+      --amber-soft: rgba(245, 158, 11, 0.15);
+      --red: #EF4444;
+      --red-soft: rgba(239, 68, 68, 0.15);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.15);
+      --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.35);
+      --shadow-md: 0 12px 30px rgba(0, 0, 0, 0.48);
+      --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.72);
+      --seg-bg: rgba(255, 255, 255, 0.06);
+      --seg-active: #232838;
+      --safe-top: env(safe-area-inset-top, 16px);
+      --safe-bottom: env(safe-area-inset-bottom, 20px);
+    }
+
+    [data-theme="light"] {
+      --bg: #F4F5F8;
+      --bg-elevated: rgba(255, 255, 255, 0.88);
+      --card: #FFFFFF;
+      --card-subtle: #F0F2F7;
+      --card-hover: #E8EBF2;
+      --text: #111318;
+      --text-secondary: #5A6275;
+      --text-tertiary: #8891A5;
+      --accent: #E11D48;
+      --accent-soft: rgba(225, 29, 72, 0.10);
+      --blue: #2563EB;
+      --blue-soft: rgba(37, 99, 235, 0.10);
+      --green: #16A34A;
+      --green-soft: rgba(22, 163, 74, 0.12);
+      --amber: #D97706;
+      --amber-soft: rgba(217, 119, 6, 0.12);
+      --red: #DC2626;
+      --red-soft: rgba(220, 38, 38, 0.12);
+      --border: rgba(17, 19, 24, 0.08);
+      --border-strong: rgba(17, 19, 24, 0.15);
+      --shadow-sm: 0 2px 8px rgba(17, 19, 24, 0.04);
+      --shadow-md: 0 10px 26px rgba(17, 19, 24, 0.07);
+      --shadow-lg: 0 20px 48px rgba(17, 19, 24, 0.16);
+      --seg-bg: rgba(17, 19, 24, 0.06);
+      --seg-active: #FFFFFF;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-top: var(--safe-top);
+      padding-bottom: calc(var(--safe-bottom) + 48px);
+      -webkit-font-smoothing: antialiased;
+      transition: background-color 0.22s ease, color 0.22s ease;
+    }
+
+    svg.icon {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      stroke-width: 1.85;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      flex-shrink: 0;
+    }
+    svg.icon-xs { width: 13px; height: 13px; }
+    svg.icon-sm { width: 15px; height: 15px; }
+    svg.icon-lg { width: 22px; height: 22px; }
+
+    /* Lock / Owner Auth Gate */
+    .gate-screen {
+      min-height: 85vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .gate-card {
+      width: 100%;
+      max-width: 440px;
+      background: var(--card);
+      border: 1px solid var(--border-strong);
+      border-radius: 24px;
+      padding: 28px 22px;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .gate-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .gate-logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255, 45, 85, 0.25);
+    }
+
+    .gate-title {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.4px;
+    }
+
+    .gate-sub {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    /* Topbar */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: var(--bg-elevated);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px;
+    }
+
+    .topbar-inner {
+      max-width: 1320px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 4px 9px;
+      border-radius: 8px;
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .live-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--green);
+      background: var(--green-soft);
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      height: 36px;
+      padding: 0 13px;
+      border-radius: 11px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 0.12s ease, background-color 0.15s ease, border-color 0.15s ease;
+      white-space: nowrap;
+    }
+    .btn:hover { background: var(--card-hover); border-color: var(--border-strong); }
+    .btn:active { transform: scale(0.96); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #FFFFFF;
+    }
+    .btn-primary:hover { background: #e62449; border-color: #e62449; }
+
+    .btn-blue {
+      background: var(--blue-soft);
+      border-color: rgba(59, 130, 246, 0.35);
+      color: var(--blue);
+    }
+
+    .btn-warn {
+      background: var(--amber-soft);
+      border-color: rgba(245, 158, 11, 0.35);
+      color: var(--amber);
+    }
+
+    .btn-danger {
+      background: var(--red-soft);
+      border-color: rgba(239, 68, 68, 0.35);
+      color: var(--red);
+    }
+
+    .btn-success {
+      background: var(--green-soft);
+      border-color: rgba(34, 197, 94, 0.35);
+      color: var(--green);
+    }
+
+    .btn-sm {
+      height: 30px;
+      padding: 0 10px;
+      font-size: 12px;
+      border-radius: 9px;
+    }
+
+    /* Main Container */
+    .main {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 18px 16px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    @media (min-width: 768px) {
+      .kpi-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+
+    .kpi-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 15px 16px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .kpi-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .kpi-value {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.6px;
+    }
+
+    .kpi-sub {
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+
+    /* Navigation Tabs & Toolbar */
+    .nav-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .segmented {
+      display: inline-flex;
+      background: var(--seg-bg);
+      padding: 3px;
+      border-radius: 13px;
+      gap: 3px;
+      border: 1px solid var(--border);
+      overflow-x: auto;
+      max-width: 100%;
+    }
+
+    .seg-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.16s ease;
+    }
+    .seg-btn.active {
+      background: var(--seg-active);
+      color: var(--text);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0 12px;
+      height: 38px;
+      min-width: 240px;
+      flex: 1;
+      max-width: 380px;
+    }
+    .search-box input {
+      width: 100%;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+    }
+
+    /* Users Grid */
+    .users-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    @media (min-width: 768px) {
+      .users-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (min-width: 1120px) {
+      .users-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+
+    .user-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: border-color 0.15s ease;
+    }
+    .user-card.suspended {
+      border-color: rgba(239, 68, 68, 0.45);
+      background: linear-gradient(180deg, rgba(239, 68, 68, 0.05) 0%, var(--card) 45%);
+    }
+
+    .user-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .user-identity {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-width: 0;
+    }
+
+    .user-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 13px;
+      background: var(--card-subtle);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    .user-name {
+      font-size: 15px;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .user-handle {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    .status-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .status-active { background: var(--green-soft); color: var(--green); }
+    .status-blocked { background: var(--red-soft); color: var(--red); }
+
+    .user-stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      background: var(--card-subtle);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 9px 10px;
+      text-align: center;
+    }
+    .stat-num { font-size: 15px; font-weight: 800; color: var(--text); }
+    .stat-lbl { font-size: 10px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; }
+
+    .user-rooms-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .room-chip {
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--card-subtle);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 3px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.14s ease;
+    }
+    .room-chip:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+      background: var(--blue-soft);
+    }
+
+    .ban-reason-box {
+      font-size: 12px;
+      color: var(--red);
+      background: var(--red-soft);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      border-radius: 10px;
+      padding: 8px 10px;
+    }
+
+    .user-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      margin-top: auto;
+    }
+    .user-actions .btn { flex: 1; min-width: 84px; }
+
+    /* Rooms & Logs Lists */
+    .panel-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 12px;
+    }
+
+    .log-item {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 11px 12px;
+      border-radius: 12px;
+      background: var(--card-subtle);
+      border: 1px solid var(--border);
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+    }
+
+    /* Observer Room Inspector */
+    .observer-banner {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.16), rgba(255, 45, 85, 0.12));
+      border: 1px solid rgba(59, 130, 246, 0.35);
+      border-radius: 16px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .observer-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      padding: 4px 9px;
+      border-radius: 8px;
+      background: var(--blue-soft);
+      color: var(--blue);
+    }
+
+    .wish-row-card {
+      background: var(--card-subtle);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .member-row-card {
+      background: var(--card-subtle);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .pill-mini {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+      display: inline-block;
+    }
+    .pill-blue { background: var(--blue-soft); color: var(--blue); }
+    .pill-green { background: var(--green-soft); color: var(--green); }
+    .pill-amber { background: var(--amber-soft); color: var(--amber); }
+    .pill-red { background: var(--red-soft); color: var(--red); }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 120;
+      background: rgba(0, 0, 0, 0.68);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-backdrop.open { display: flex; }
+
+    .modal-box {
+      width: 100%;
+      max-width: 780px;
+      max-height: 90vh;
+      overflow-y: auto;
+      background: var(--card);
+      border: 1px solid var(--border-strong);
+      border-radius: 22px;
+      padding: 20px;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .form-group {
+      background: var(--card-subtle);
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      padding: 10px 12px;
+    }
+    .form-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 5px;
+    }
+    .form-input, .form-textarea, .form-select {
+      width: 100%;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+    }
+    .form-select option {
+      background: var(--card);
+      color: var(--text);
+    }
+    .form-textarea { min-height: 64px; resize: vertical; }
+
+    .error-msg {
+      background: var(--red-soft);
+      color: var(--red);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 10px 12px;
+      border-radius: 11px;
+      font-size: 13px;
+      font-weight: 600;
+      display: none;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: calc(var(--safe-bottom) + 18px);
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border-strong);
+      box-shadow: var(--shadow-lg);
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s ease;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <!-- OWNER LOGIN GATE -->
+  <div class="gate-screen" id="ownerGate">
+    <form class="gate-card" onsubmit="handleOwnerLogin(event)">
+      <div class="gate-brand">
+        <div class="gate-logo">
+          <svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+        </div>
+        <div>
+          <div class="gate-title">Wishlist Owner Console</div>
+          <div class="gate-sub">Панель владельца сервиса · <span class="mono">wishlist-c58df</span></div>
+        </div>
+      </div>
+
+      <p style="font-size:13px; color:var(--text-secondary); line-height:1.45;">
+        Отдельный пульт управления аккаунтами пользователей, режимом наблюдателя в комнатах, желаниями, участниками и журналом действий.
+      </p>
+
+      <div class="error-msg" id="gateError"></div>
+
+      <div class="form-group">
+        <label class="form-label" for="gateUsername">Логин владельца</label>
+        <input type="text" class="form-input" id="gateUsername" value="owner" required autocomplete="username" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="gatePasscode">Ключ / пароль владельца</label>
+        <input type="password" class="form-input" id="gatePasscode" placeholder="Введите ключ владельца" required autocomplete="current-password" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="gateDbUrl">Firebase Realtime Database URL</label>
+        <input type="url" class="form-input mono" id="gateDbUrl" value="https://wishlist-c58df-default-rtdb.firebaseio.com" required />
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="height:44px; font-size:14px;">Войти в панель владельца</button>
+    </form>
+  </div>
+
+  <!-- MAIN CONSOLE -->
+  <div id="adminConsole" style="display:none;">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand-group">
+          <div class="brand-badge">
+            <svg class="icon icon-xs" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span>Owner Admin v2</span>
+          </div>
+          <div>
+            <div style="font-size:16px; font-weight:800; letter-spacing:-0.3px;">Wishlist Control Center</div>
+            <div style="font-size:11px; color:var(--text-tertiary);" id="lastSyncLabel">Ожидание синхронизации...</div>
+          </div>
+          <span class="live-pill" id="connPill">
+            <span class="live-dot"></span>
+            <span>Live</span>
+          </span>
+        </div>
+
+        <div class="topbar-actions">
+          <button type="button" class="btn btn-sm" onclick="refreshAllData(true)">
+            <svg class="icon icon-xs" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+            <span>Обновить</span>
+          </button>
+          <button type="button" class="btn btn-sm" onclick="exportSystemSnapshot()">
+            <svg class="icon icon-xs" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            <span>Бэкап JSON</span>
+          </button>
+          <button type="button" class="btn btn-sm" onclick="toggleTheme()">
+            <svg class="icon icon-xs" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+            <span>Тема</span>
+          </button>
+          <button type="button" class="btn btn-sm btn-danger" onclick="logoutOwner()">Выйти</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <!-- KPI Cards -->
+      <section class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">
+            <span>Всего аккаунтов</span>
+            <svg class="icon icon-sm" style="color:var(--blue);" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="kpi-value" id="kpiUsers">0</div>
+          <div class="kpi-sub" id="kpiBlockedSub">Заблокировано: 0</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">
+            <span>Комнат в базе</span>
+            <svg class="icon icon-sm" style="color:var(--accent);" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+          </div>
+          <div class="kpi-value" id="kpiRooms">0</div>
+          <div class="kpi-sub" id="kpiMembersTotalSub">Участий в комнатах: 0</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">
+            <span>Всего желаний</span>
+            <svg class="icon icon-sm" style="color:var(--amber);" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/></svg>
+          </div>
+          <div class="kpi-value" id="kpiWishes">0</div>
+          <div class="kpi-sub" id="kpiFulfilledSub">Подарено: 0</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">
+            <span>Событий в логе</span>
+            <svg class="icon icon-sm" style="color:var(--green);" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <div class="kpi-value" id="kpiLogs">0</div>
+          <div class="kpi-sub">Мониторинг действий</div>
+        </div>
+      </section>
+
+      <!-- Tabs + Filter -->
+      <section class="nav-toolbar">
+        <div class="segmented" id="consoleTabs">
+          <button type="button" class="seg-btn active" data-tab="users" onclick="setConsoleTab('users')">Аккаунты пользователей</button>
+          <button type="button" class="seg-btn" data-tab="rooms" onclick="setConsoleTab('rooms')">Комнаты и наблюдатель</button>
+          <button type="button" class="seg-btn" data-tab="activity" onclick="setConsoleTab('activity')">Мониторинг и логи</button>
+          <button type="button" class="seg-btn" data-tab="security" onclick="setConsoleTab('security')">Ключ и доступ</button>
+        </div>
+
+        <div class="search-box" id="consoleSearchWrap">
+          <svg class="icon icon-sm" style="color:var(--text-tertiary);" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" id="consoleSearch" placeholder="Поиск по имени, @логину, комнате или желанию..." oninput="renderActiveTab()" />
+        </div>
+      </section>
+
+      <!-- Dynamic Tab Content -->
+      <section id="consoleContent"></section>
+    </main>
+  </div>
+
+  <!-- User Monitoring Modal (Rooms + Spectator Mode + Wishes + Activity) -->
+  <div class="modal-backdrop" id="userInspectorModal" onclick="if(event.target===this) closeModal('userInspectorModal')">
+    <div class="modal-box" id="userInspectorBody"></div>
+  </div>
+
+  <!-- Room Spectator & Full Control Modal -->
+  <div class="modal-backdrop" id="roomObserverModal" onclick="if(event.target===this) closeModal('roomObserverModal')">
+    <div class="modal-box" id="roomObserverBody"></div>
+  </div>
+
+  <!-- Edit User Profile Modal -->
+  <div class="modal-backdrop" id="editUserModal" onclick="if(event.target===this) closeModal('editUserModal')">
+    <div class="modal-box" style="max-width:520px;">
+      <div class="modal-header">
+        <div style="font-size:17px; font-weight:800;" id="editUserTitle">Редактирование аккаунта</div>
+        <button type="button" class="btn btn-sm" onclick="closeModal('editUserModal')">✕</button>
+      </div>
+      <form id="editUserForm" onsubmit="saveEditedUser(event)" style="display:flex; flex-direction:column; gap:10px;">
+        <input type="hidden" id="editUserUsername" />
+        <div class="form-group">
+          <label class="form-label">Отображаемое имя</label>
+          <input type="text" class="form-input" id="editUserDisplayName" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">О себе / заметка</label>
+          <textarea class="form-textarea" id="editUserBio"></textarea>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px;">
+          <div class="form-group">
+            <label class="form-label">Размер одежды</label>
+            <input type="text" class="form-input" id="editUserClothes" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Размер обуви</label>
+            <input type="text" class="form-input" id="editUserShoes" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Размер кольца</label>
+            <input type="text" class="form-input" id="editUserRing" />
+          </div>
+        </div>
+        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:4px;">
+          <button type="button" class="btn" onclick="closeModal('editUserModal')">Отмена</button>
+          <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Ban Reason Modal -->
+  <div class="modal-backdrop" id="banReasonModal" onclick="if(event.target===this) closeModal('banReasonModal')">
+    <div class="modal-box" style="max-width:440px;">
+      <div class="modal-header">
+        <div style="font-size:17px; font-weight:800; color:var(--red);" id="banModalTitle">Блокировка пользователя</div>
+        <button type="button" class="btn btn-sm" onclick="closeModal('banReasonModal')">✕</button>
+      </div>
+      <p style="font-size:13px; color:var(--text-secondary); line-height:1.45;">
+        Пользователь получит метку блокировки на уровне сервиса и будет добавлен в чёрные списки своих комнат.
+      </p>
+      <input type="hidden" id="banTargetUsername" />
+      <div class="form-group">
+        <label class="form-label">Причина блокировки (необязательно)</label>
+        <input type="text" class="form-input" id="banReasonInput" placeholder="Нарушение правил сервиса, спам..." />
+      </div>
+      <div style="display:flex; gap:8px; justify-content:flex-end;">
+        <button type="button" class="btn" onclick="closeModal('banReasonModal')">Отмена</button>
+        <button type="button" class="btn btn-danger" onclick="confirmBanUser()">Заблокировать аккаунт</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const DEFAULT_DB_URL = "https://wishlist-c58df-default-rtdb.firebaseio.com";
+    const DEFAULT_OWNER_KEY_HASH = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"; // sha256("admin")
+
+    let adminState = {
+      dbUrl: DEFAULT_DB_URL,
+      ownerName: "owner",
+      unlocked: false,
+      activeTab: "users",
+      usersMap: {},
+      roomsMap: {},
+      auditLogs: [],
+      ownerConfig: null,
+      observedRoomSlug: null,
+      observedUserContext: null
+    };
+
+    try {
+      const savedUrl = localStorage.getItem("wl_owner_db_url");
+      if (savedUrl) adminState.dbUrl = savedUrl;
+      const savedOwner = localStorage.getItem("wl_owner_name");
+      if (savedOwner) adminState.ownerName = savedOwner;
+      if (sessionStorage.getItem("wl_owner_unlocked") === "1") adminState.unlocked = true;
+    } catch (e) {}
+
+    let pollTimer = null;
+
+    function showToast(msg) {
+      const el = document.getElementById("toast");
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.add("show");
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => el.classList.remove("show"), 2600);
+    }
+
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.add("open");
+    }
+
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove("open");
+    }
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      const next = html.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      html.setAttribute("data-theme", next);
+      try { localStorage.setItem("wl_owner_theme", next); } catch (e) {}
+    }
+
+    async function sha256Hex(str) {
+      try {
+        if (window.crypto && window.crypto.subtle && window.isSecureContext) {
+          const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(str)));
+          return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+        }
+      } catch (e) {}
+      // Deterministic fallback hash if crypto.subtle is unavailable
+      let h1 = 0x811c9dc5;
+      let h2 = 0x01000193;
+      const s = String(str);
+      for (let i = 0; i < s.length; i++) {
+        const ch = s.charCodeAt(i);
+        h1 ^= ch;
+        h1 = Math.imul(h1, 0x01000193);
+        h2 ^= ch + i;
+        h2 = Math.imul(h2, 0x85ebca6b);
+      }
+      return ((h1 >>> 0).toString(16).padStart(8, "0") + (h2 >>> 0).toString(16).padStart(8, "0"));
+    }
+
+    function dbBase() {
+      return String(adminState.dbUrl || DEFAULT_DB_URL).replace(/\/$/, "");
+    }
+
+    function objectToArray(val) {
+      if (!val) return [];
+      if (Array.isArray(val)) return val.filter(Boolean);
+      if (typeof val === "object") return Object.values(val).filter(Boolean);
+      return [];
+    }
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function formatDate(ts) {
+      if (!ts) return "—";
+      const d = new Date(Number(ts));
+      if (isNaN(d.getTime())) return String(ts);
+      return d.toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    }
+
+    async function handleOwnerLogin(event) {
+      event.preventDefault();
+      const errBox = document.getElementById("gateError");
+      errBox.style.display = "none";
+
+      const uname = document.getElementById("gateUsername").value.trim() || "owner";
+      const pass = document.getElementById("gatePasscode").value;
+      const urlVal = document.getElementById("gateDbUrl").value.trim() || DEFAULT_DB_URL;
+
+      adminState.dbUrl = urlVal.replace(/\/$/, "");
+      adminState.ownerName = uname;
+
+      const enteredHash = await sha256Hex(pass);
+      let expectedHash = DEFAULT_OWNER_KEY_HASH;
+
+      try {
+        const cfgRes = await fetch(`${dbBase()}/systemAdmin/config.json?t=${Date.now()}`);
+        if (cfgRes.ok) {
+          const cfgData = await cfgRes.json();
+          if (cfgData && cfgData.keyHash) {
+            expectedHash = cfgData.keyHash;
+            adminState.ownerConfig = cfgData;
+          }
+        }
+      } catch (e) {}
+
+      const matchesDefaultAdmin = (pass === "admin" && expectedHash === DEFAULT_OWNER_KEY_HASH);
+      if (enteredHash !== expectedHash && !matchesDefaultAdmin) {
+        errBox.textContent = "Неверный ключ владельца. По умолчанию для первого входа используется пароль: admin";
+        errBox.style.display = "block";
+        return;
+      }
+
+      try {
+        localStorage.setItem("wl_owner_db_url", adminState.dbUrl);
+        localStorage.setItem("wl_owner_name", adminState.ownerName);
+        sessionStorage.setItem("wl_owner_unlocked", "1");
+      } catch (e) {}
+      adminState.unlocked = true;
+
+      await writeAuditLog("owner_login", `Вход в панель владельца (${uname})`);
+      enterConsole();
+    }
+
+    function logoutOwner() {
+      try { sessionStorage.removeItem("wl_owner_unlocked"); } catch (e) {}
+      adminState.unlocked = false;
+      adminState.observedRoomSlug = null;
+      if (pollTimer) clearInterval(pollTimer);
+      document.getElementById("adminConsole").style.display = "none";
+      document.getElementById("ownerGate").style.display = "flex";
+      document.getElementById("gatePasscode").value = "";
+    }
+
+    async function enterConsole() {
+      document.getElementById("ownerGate").style.display = "none";
+      document.getElementById("adminConsole").style.display = "block";
+      await refreshAllData(false);
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = setInterval(() => {
+        refreshAllData(false);
+        if (document.getElementById("roomObserverModal").classList.contains("open") && adminState.observedRoomSlug) {
+          renderRoomObserverModal(adminState.observedRoomSlug);
+        }
+      }, 6000);
+    }
+
+    async function writeAuditLog(action, details, target = "") {
+      try {
+        const entry = {
+          id: "log_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
+          action,
+          details,
+          target,
+          actor: adminState.ownerName || "owner",
+          timestamp: Date.now()
+        };
+        await fetch(`${dbBase()}/systemAdmin/auditLogs/${entry.id}.json`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(entry)
+        });
+      } catch (e) {}
+    }
+
+    async function refreshAllData(notify) {
+      try {
+        const [usersRes, roomsRes, sysRes] = await Promise.all([
+          fetch(`${dbBase()}/users.json?t=${Date.now()}`),
+          fetch(`${dbBase()}/rooms.json?t=${Date.now()}`),
+          fetch(`${dbBase()}/systemAdmin.json?t=${Date.now()}`)
+        ]);
+
+        const usersRaw = usersRes.ok ? await usersRes.json() : {};
+        const roomsRaw = roomsRes.ok ? await roomsRes.json() : {};
+        const sysRaw = sysRes.ok ? await sysRes.json() : {};
+
+        adminState.usersMap = (usersRaw && typeof usersRaw === "object") ? usersRaw : {};
+        adminState.roomsMap = (roomsRaw && typeof roomsRaw === "object") ? roomsRaw : {};
+        adminState.ownerConfig = (sysRaw && sysRaw.config) ? sysRaw.config : null;
+        adminState.auditLogs = objectToArray(sysRaw && sysRaw.auditLogs).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+        document.getElementById("connPill").innerHTML = `<span class="live-dot"></span><span>Live</span>`;
+        document.getElementById("lastSyncLabel").textContent = `Обновлено: ${new Date().toLocaleTimeString("ru-RU")}`;
+
+        updateKPIs();
+        renderActiveTab();
+        if (document.getElementById("userInspectorModal").classList.contains("open") && adminState.observedUserContext) {
+          inspectUser(adminState.observedUserContext, true);
+        }
+        if (notify) showToast("Данные синхронизированы с Firebase");
+      } catch (err) {
+        console.error(err);
+        document.getElementById("connPill").innerHTML = `<span>Нет связи</span>`;
+        showToast("Ошибка подключения к Firebase");
+      }
+    }
+
+    function getUserRoomsDetailed(user) {
+      const result = [];
+      const seenSlugs = new Set();
+
+      Object.entries(adminState.roomsMap || {}).forEach(([slug, rObj]) => {
+        if (!rObj || typeof rObj !== "object") return;
+        const members = objectToArray(rObj.members);
+        const memberMatch = members.find(m => (user.id && m.id === user.id) || (m.username && m.username === user.username));
+        const inUserProfileRooms = user.raw && user.raw.rooms && Boolean(user.raw.rooms[slug]);
+
+        if (memberMatch || inUserProfileRooms) {
+          seenSlugs.add(slug);
+          const meta = rObj.meta || {};
+          const wishes = objectToArray(rObj.wishes);
+          const userWishesInRoom = wishes.filter(w =>
+            (user.id && w.ownerId === user.id) || (w.ownerId && w.ownerId.includes(`_${user.username}_`))
+          );
+          const isBannedInRoom = Boolean(
+            (rObj.bans && ((user.id && rObj.bans[user.id]) || (user.username && rObj.bans[user.username]))) ||
+            (memberMatch && memberMatch.banned)
+          );
+
+          result.push({
+            slug,
+            title: meta.title || slug,
+            description: meta.description || "",
+            ownerName: meta.ownerName || meta.ownerUsername || "—",
+            membersCount: members.length,
+            totalWishesCount: wishes.length,
+            userWishesCount: userWishesInRoom.length,
+            role: (memberMatch && memberMatch.role) || (meta.ownerUsername === user.username ? "owner" : "member"),
+            isBannedInRoom
+          });
+        }
+      });
+
+      if (user.raw && user.raw.rooms && typeof user.raw.rooms === "object") {
+        Object.entries(user.raw.rooms).forEach(([slug, rInfo]) => {
+          if (!seenSlugs.has(slug)) {
+            result.push({
+              slug,
+              title: (rInfo && rInfo.title) || slug,
+              description: "",
+              ownerName: "—",
+              membersCount: 0,
+              totalWishesCount: 0,
+              userWishesCount: 0,
+              role: (rInfo && rInfo.role) || "member",
+              isBannedInRoom: false
+            });
+          }
+        });
+      }
+
+      return result;
+    }
+
+    function getEnrichedUsers() {
+      const users = Object.entries(adminState.usersMap || {}).map(([key, u]) => {
+        const username = (u && u.username) || key;
+        const userId = u && u.id;
+        let wishCount = 0;
+        let fulfilledCount = 0;
+        let plannedCount = 0;
+        const roomEntries = [];
+
+        Object.entries(adminState.roomsMap || {}).forEach(([rSlug, rObj]) => {
+          if (!rObj || typeof rObj !== "object") return;
+          const members = objectToArray(rObj.members);
+          const isMember = members.some(m => (userId && m.id === userId) || m.username === username) || (u && u.rooms && u.rooms[rSlug]);
+          const rTitle = (rObj.meta && rObj.meta.title) || rSlug;
+          if (isMember) {
+            roomEntries.push({ slug: rSlug, title: rTitle });
+          }
+
+          const wishes = objectToArray(rObj.wishes);
+          wishes.forEach(w => {
+            if ((userId && w.ownerId === userId) || (w.ownerId && w.ownerId.includes(`_${username}_`))) {
+              wishCount++;
+              if (w.fulfilled) fulfilledCount++;
+              if (w.plannedBy) plannedCount++;
+            }
+          });
+        });
+
+        return {
+          raw: u || {},
+          username,
+          id: userId || username,
+          displayName: (u && u.displayName) || username,
+          icon: (u && u.icon) || "sparkles",
+          avatar: (u && u.avatar) || "",
+          bio: (u && u.bio) || "",
+          clothesSize: (u && u.clothesSize) || "",
+          shoeSize: (u && u.shoeSize) || "",
+          ringSize: (u && u.ringSize) || "",
+          accentColor: (u && u.accentColor) || "#FF2D55",
+          suspended: Boolean(u && u.suspended),
+          banReason: (u && u.banReason) || "",
+          suspendedAt: (u && u.suspendedAt) || null,
+          wishCount,
+          fulfilledCount,
+          plannedCount,
+          roomEntries,
+          roomNames: roomEntries.map(x => x.title)
+        };
+      });
+
+      return users;
+    }
+
+    function updateKPIs() {
+      const users = getEnrichedUsers();
+      const blockedUsers = users.filter(u => u.suspended);
+      const roomEntries = Object.entries(adminState.roomsMap || {});
+
+      let totalWishes = 0;
+      let totalFulfilled = 0;
+      let totalMemberships = 0;
+
+      roomEntries.forEach(([, rObj]) => {
+        if (!rObj || typeof rObj !== "object") return;
+        totalMemberships += objectToArray(rObj.members).length;
+        const wishes = objectToArray(rObj.wishes);
+        totalWishes += wishes.length;
+        totalFulfilled += wishes.filter(w => w.fulfilled).length;
+      });
+
+      document.getElementById("kpiUsers").textContent = users.length;
+      document.getElementById("kpiBlockedSub").textContent = `Заблокировано: ${blockedUsers.length}`;
+      document.getElementById("kpiRooms").textContent = roomEntries.length;
+      document.getElementById("kpiMembersTotalSub").textContent = `Участий в комнатах: ${totalMemberships}`;
+      document.getElementById("kpiWishes").textContent = totalWishes;
+      document.getElementById("kpiFulfilledSub").textContent = `Подарено: ${totalFulfilled}`;
+      document.getElementById("kpiLogs").textContent = adminState.auditLogs.length;
+    }
+
+    function setConsoleTab(tab) {
+      adminState.activeTab = tab;
+      document.querySelectorAll("#consoleTabs .seg-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.tab === tab);
+      });
+      document.getElementById("consoleSearchWrap").style.display = (tab === "security") ? "none" : "flex";
+      renderActiveTab();
+    }
+
+    function renderActiveTab() {
+      const container = document.getElementById("consoleContent");
+      const query = (document.getElementById("consoleSearch").value || "").trim().toLowerCase();
+
+      if (adminState.activeTab === "users") {
+        renderUsersTab(container, query);
+      } else if (adminState.activeTab === "rooms") {
+        renderRoomsTab(container, query);
+      } else if (adminState.activeTab === "activity") {
+        renderActivityTab(container, query);
+      } else if (adminState.activeTab === "security") {
+        renderSecurityTab(container);
+      }
+    }
+
+    function renderUsersTab(container, query) {
+      let users = getEnrichedUsers();
+      if (query) {
+        users = users.filter(u =>
+          u.displayName.toLowerCase().includes(query) ||
+          u.username.toLowerCase().includes(query) ||
+          u.bio.toLowerCase().includes(query) ||
+          u.roomNames.some(r => r.toLowerCase().includes(query))
+        );
+      }
+
+      if (users.length === 0) {
+        container.innerHTML = `<div class="panel-card" style="text-align:center; color:var(--text-secondary);">Аккаунты пользователей не найдены</div>`;
+        return;
+      }
+
+      container.innerHTML = `<div class="users-grid">${users.map(u => `
+        <article class="user-card ${u.suspended ? "suspended" : ""}">
+          <div class="user-top">
+            <div class="user-identity">
+              <div class="user-avatar" style="border-color:${escapeHtml(u.accentColor)}55; color:${escapeHtml(u.accentColor)};">
+                ${u.avatar ? `<img src="${escapeHtml(u.avatar)}" alt="" />` : escapeHtml(u.displayName.slice(0, 2).toUpperCase())}
+              </div>
+              <div style="min-width:0;">
+                <div class="user-name">${escapeHtml(u.displayName)}</div>
+                <div class="user-handle">@${escapeHtml(u.username)}</div>
+              </div>
+            </div>
+            <span class="status-tag ${u.suspended ? "status-blocked" : "status-active"}">
+              ${u.suspended ? "Заблокирован" : "Активен"}
+            </span>
+          </div>
+
+          ${u.bio ? `<div style="font-size:12px; color:var(--text-secondary); line-height:1.4;">${escapeHtml(u.bio)}</div>` : ""}
+
+          <div class="user-stats-row">
+            <div>
+              <div class="stat-num">${u.wishCount}</div>
+              <div class="stat-lbl">Желаний</div>
+            </div>
+            <div>
+              <div class="stat-num">${u.fulfilledCount}</div>
+              <div class="stat-lbl">Подарено</div>
+            </div>
+            <div>
+              <div class="stat-num">${u.roomEntries.length}</div>
+              <div class="stat-lbl">Комнат</div>
+            </div>
+          </div>
+
+          <div class="user-rooms-chips">
+            ${u.roomEntries.length > 0
+              ? u.roomEntries.map(r => `<button type="button" class="room-chip" title="Открыть комнату в режиме наблюдателя" onclick="openRoomObserver('${escapeHtml(r.slug)}', '${escapeHtml(u.username)}')">${escapeHtml(r.title)} · Наблюдать</button>`).join("")
+              : `<span class="room-chip">Нет комнат</span>`
+            }
+          </div>
+
+          ${u.suspended && u.banReason ? `
+            <div class="ban-reason-box"><strong>Причина:</strong> ${escapeHtml(u.banReason)}</div>
+          ` : ""}
+
+          <div class="user-actions">
+            <button type="button" class="btn btn-sm btn-blue" onclick="inspectUser('${escapeHtml(u.username)}')">Мониторинг</button>
+            <button type="button" class="btn btn-sm" onclick="openEditUserModal('${escapeHtml(u.username)}')">Изменить</button>
+            ${u.suspended
+              ? `<button type="button" class="btn btn-sm btn-success" onclick="unblockUserGlobal('${escapeHtml(u.username)}')">Разблокировать</button>`
+              : `<button type="button" class="btn btn-sm btn-warn" onclick="openBanReasonModal('${escapeHtml(u.username)}')">Заблокировать</button>`
+            }
+            <button type="button" class="btn btn-sm btn-danger" onclick="deleteUserGlobal('${escapeHtml(u.username)}')">Удалить</button>
+          </div>
+        </article>
+      `).join("")}</div>`;
+    }
+
+    function renderRoomsTab(container, query) {
+      let entries = Object.entries(adminState.roomsMap || {});
+      if (query) {
+        entries = entries.filter(([slug, rObj]) => {
+          const title = (rObj && rObj.meta && rObj.meta.title) || slug;
+          return slug.toLowerCase().includes(query) || title.toLowerCase().includes(query);
+        });
+      }
+
+      if (entries.length === 0) {
+        container.innerHTML = `<div class="panel-card" style="text-align:center; color:var(--text-secondary);">Комнаты не найдены</div>`;
+        return;
+      }
+
+      container.innerHTML = entries.map(([slug, rObj]) => {
+        const meta = (rObj && rObj.meta) || {};
+        const title = meta.title || slug;
+        const members = objectToArray(rObj && rObj.members);
+        const wishes = objectToArray(rObj && rObj.wishes);
+        const bans = Object.keys((rObj && rObj.bans) || {}).length;
+
+        return `
+          <div class="panel-card">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+              <div>
+                <div style="font-size:16px; font-weight:800;">${escapeHtml(title)} <span class="mono" style="color:var(--text-tertiary); font-weight:600;">#${escapeHtml(slug)}</span></div>
+                <div style="font-size:12px; color:var(--text-secondary); margin-top:3px;">
+                  Создатель: <strong>${escapeHtml(meta.ownerName || meta.ownerUsername || "не указан")}</strong> · Участников: ${members.length} · Желаний: ${wishes.length} · Бан-лист: ${bans}
+                </div>
+                ${meta.description ? `<div style="font-size:12px; color:var(--text-tertiary); margin-top:6px;">${escapeHtml(meta.description)}</div>` : ""}
+              </div>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button type="button" class="btn btn-sm btn-blue" onclick="openRoomObserver('${escapeHtml(slug)}')">Режим наблюдателя</button>
+                <button type="button" class="btn btn-sm btn-danger" onclick="deleteRoomAsOwner('${escapeHtml(slug)}', '${escapeHtml(title)}')">Удалить комнату</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderActivityTab(container, query) {
+      let logs = adminState.auditLogs || [];
+      if (query) {
+        logs = logs.filter(l =>
+          (l.details && l.details.toLowerCase().includes(query)) ||
+          (l.action && l.action.toLowerCase().includes(query)) ||
+          (l.target && l.target.toLowerCase().includes(query))
+        );
+      }
+
+      container.innerHTML = `
+        <div class="panel-card">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+            <div style="font-size:16px; font-weight:800;">Журнал действий администратора и мониторинга</div>
+            <button type="button" class="btn btn-sm btn-danger" onclick="clearAuditLogs()">Очистить лог</button>
+          </div>
+          ${logs.length === 0
+            ? `<div style="color:var(--text-secondary); font-size:13px;">Записей в журнале пока нет.</div>`
+            : logs.map(l => `
+              <div class="log-item">
+                <div>
+                  <span class="mono" style="color:var(--blue); font-weight:700;">${escapeHtml(l.action)}</span>
+                  <div style="margin-top:3px; color:var(--text);">${escapeHtml(l.details)}</div>
+                  ${l.target ? `<div class="mono" style="color:var(--text-tertiary); margin-top:2px;">Цель: ${escapeHtml(l.target)}</div>` : ""}
+                </div>
+                <div style="font-size:11px; color:var(--text-tertiary); white-space:nowrap;">${formatDate(l.timestamp)}</div>
+              </div>
+            `).join("")
+          }
+        </div>
+      `;
+    }
+
+    function renderSecurityTab(container) {
+      container.innerHTML = `
+        <div class="panel-card" style="max-width:540px;">
+          <div style="font-size:16px; font-weight:800; margin-bottom:6px;">Смена ключа доступа владельца</div>
+          <p style="font-size:13px; color:var(--text-secondary); margin-bottom:14px;">
+            Новый хеш пароля сохраняется в <span class="mono">/systemAdmin/config</span> вашей базы Firebase.
+          </p>
+          <form onsubmit="updateOwnerPasscode(event)" style="display:flex; flex-direction:column; gap:10px;">
+            <div class="form-group">
+              <label class="form-label">Новый пароль владельца</label>
+              <input type="password" class="form-input" id="newOwnerPass" required minlength="4" placeholder="Введите новый надёжный пароль" />
+            </div>
+            <button type="submit" class="btn btn-primary">Обновить ключ владельца</button>
+          </form>
+        </div>
+      `;
+    }
+
+    async function updateOwnerPasscode(event) {
+      event.preventDefault();
+      const pass = document.getElementById("newOwnerPass").value;
+      const hash = await sha256Hex(pass);
+      await fetch(`${dbBase()}/systemAdmin/config.json`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keyHash: hash, updatedAt: Date.now(), updatedBy: adminState.ownerName })
+      });
+      document.getElementById("newOwnerPass").value = "";
+      await writeAuditLog("owner_key_changed", "Обновлён ключ доступа владельца");
+      showToast("Ключ владельца обновлён");
+    }
+
+    function inspectUser(username, silent = false) {
+      const user = getEnrichedUsers().find(u => u.username === username);
+      if (!user) return;
+      adminState.observedUserContext = username;
+
+      const userRooms = getUserRoomsDetailed(user);
+      const userWishes = [];
+      Object.entries(adminState.roomsMap || {}).forEach(([rSlug, rObj]) => {
+        const rTitle = (rObj && rObj.meta && rObj.meta.title) || rSlug;
+        objectToArray(rObj && rObj.wishes).forEach(w => {
+          if ((user.id && w.ownerId === user.id) || (w.ownerId && w.ownerId.includes(`_${username}_`))) {
+            userWishes.push({ ...w, roomSlug: rSlug, roomTitle: rTitle });
+          }
+        });
+      });
+
+      const userLogs = (adminState.auditLogs || []).filter(l =>
+        (l.target && l.target === username) || (l.details && l.details.includes(`@${username}`))
+      );
+
+      if (!silent) {
+        writeAuditLog("user_monitor_open", `Открыт мониторинг пользователя @${username} (${userRooms.length} комнат)`, username);
+      }
+
+      document.getElementById("userInspectorBody").innerHTML = `
+        <div class="modal-header">
+          <div>
+            <div style="font-size:18px; font-weight:800;">
+              ${escapeHtml(user.displayName)} <span class="mono" style="color:var(--text-tertiary);">@${escapeHtml(user.username)}</span>
+              <span class="status-tag ${user.suspended ? "status-blocked" : "status-active"}" style="margin-left:6px;">
+                ${user.suspended ? "Заблокирован" : "Активен"}
+              </span>
+            </div>
+            <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">
+              ID: <span class="mono">${escapeHtml(user.id)}</span> · Комнат: ${userRooms.length} · Желаний: ${userWishes.length}
+            </div>
+          </div>
+          <button type="button" class="btn btn-sm" onclick="closeModal('userInspectorModal')">✕</button>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px;">
+          <div class="form-group"><div class="form-label">Одежда</div><div>${escapeHtml(user.clothesSize || "—")}</div></div>
+          <div class="form-group"><div class="form-label">Обувь</div><div>${escapeHtml(user.shoeSize || "—")}</div></div>
+          <div class="form-group"><div class="form-label">Кольцо</div><div>${escapeHtml(user.ringSize || "—")}</div></div>
+        </div>
+
+        <div>
+          <div class="form-label">Комнаты пользователя (${userRooms.length}) — нажмите «Наблюдать» для входа в режиме наблюдателя</div>
+          ${userRooms.length === 0
+            ? `<div class="panel-card" style="padding:12px; font-size:13px; color:var(--text-tertiary);">Пользователь пока не состоит ни в одной комнате</div>`
+            : userRooms.map(r => `
+              <div class="member-row-card">
+                <div>
+                  <div style="font-weight:800; font-size:14px;">
+                    ${escapeHtml(r.title)} <span class="mono" style="color:var(--text-tertiary);">#${escapeHtml(r.slug)}</span>
+                    <span class="pill-mini pill-blue" style="margin-left:6px;">${escapeHtml(r.role)}</span>
+                    ${r.isBannedInRoom ? `<span class="pill-mini pill-red" style="margin-left:4px;">Бан в комнате</span>` : ""}
+                  </div>
+                  <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">
+                    Создатель: ${escapeHtml(r.ownerName)} · Участников: ${r.membersCount} · Желаний пользователя: ${r.userWishesCount} / всего ${r.totalWishesCount}
+                  </div>
+                </div>
+                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                  <button type="button" class="btn btn-sm btn-blue" onclick="openRoomObserver('${escapeHtml(r.slug)}', '${escapeHtml(user.username)}')">Наблюдать</button>
+                  <button type="button" class="btn btn-sm btn-danger" onclick="kickUserFromRoomAsOwner('${escapeHtml(r.slug)}', '${escapeHtml(user.username)}', '${escapeHtml(user.id)}')">Исключить</button>
+                </div>
+              </div>
+            `).join("")
+          }
+        </div>
+
+        <div>
+          <div class="form-label">Все желания пользователя (${userWishes.length})</div>
+          ${userWishes.length === 0
+            ? `<div style="font-size:13px; color:var(--text-tertiary);">Желаний пока нет</div>`
+            : userWishes.map(w => `
+              <div class="wish-row-card">
+                <div>
+                  <div style="font-weight:700;">
+                    ${escapeHtml(w.title)} ${w.price ? `<span style="color:var(--text-secondary);">· ${escapeHtml(w.price)}</span>` : ""}
+                    <span class="pill-mini ${w.fulfilled ? "pill-green" : (w.plannedBy ? "pill-amber" : "pill-blue")}" style="margin-left:6px;">
+                      ${w.fulfilled ? "Подарено" : (w.plannedBy ? "Запланировано: " + escapeHtml(w.plannedBy) : "Актуально")}
+                    </span>
+                  </div>
+                  <div style="font-size:11px; color:var(--text-tertiary); margin-top:2px;">
+                    Комната: <strong>${escapeHtml(w.roomTitle)}</strong> (${escapeHtml(w.roomSlug)})
+                    ${w.note ? ` · Заметка: ${escapeHtml(w.note)}` : ""}
+                  </div>
+                </div>
+                <div style="display:flex; gap:6px;">
+                  <button type="button" class="btn btn-sm" onclick="openRoomObserver('${escapeHtml(w.roomSlug)}', '${escapeHtml(user.username)}')">В комнату</button>
+                  <button type="button" class="btn btn-sm btn-danger" onclick="deleteSingleWishAsOwner('${escapeHtml(w.roomSlug)}', '${escapeHtml(w.id)}', '${escapeHtml(user.username)}')">Удалить</button>
+                </div>
+              </div>
+            `).join("")
+          }
+        </div>
+
+        <div>
+          <div class="form-label">История действий по аккаунту (${userLogs.length})</div>
+          ${userLogs.length === 0
+            ? `<div style="font-size:12px; color:var(--text-tertiary);">Пока нет записанных событий по этому аккаунту</div>`
+            : userLogs.slice(0, 10).map(l => `
+              <div class="log-item">
+                <div>
+                  <span class="mono" style="color:var(--blue); font-weight:700;">${escapeHtml(l.action)}</span>
+                  <div style="margin-top:2px;">${escapeHtml(l.details)}</div>
+                </div>
+                <div style="font-size:11px; color:var(--text-tertiary); white-space:nowrap;">${formatDate(l.timestamp)}</div>
+              </div>
+            `).join("")
+          }
+        </div>
+      `;
+      openModal("userInspectorModal");
+    }
+
+    function openRoomObserver(slug, highlightUsername = null) {
+      adminState.observedRoomSlug = slug;
+      writeAuditLog("room_observer_enter", `Вход в режим наблюдателя комнаты #${slug}${highlightUsername ? ` (фокус на @${highlightUsername})` : ""}`, slug);
+      renderRoomObserverModal(slug, highlightUsername);
+      openModal("roomObserverModal");
+    }
+
+    function renderRoomObserverModal(slug, highlightUsername = null) {
+      const rObj = adminState.roomsMap && adminState.roomsMap[slug];
+      const body = document.getElementById("roomObserverBody");
+      if (!rObj || typeof rObj !== "object") {
+        body.innerHTML = `
+          <div class="modal-header">
+            <div style="font-size:17px; font-weight:800;">Комната #${escapeHtml(slug)} не найдена</div>
+            <button type="button" class="btn btn-sm" onclick="closeModal('roomObserverModal')">✕</button>
+          </div>
+          <p style="font-size:13px; color:var(--text-secondary);">Возможно, комната была удалена или ещё не синхронизирована.</p>
+        `;
+        return;
+      }
+
+      const meta = rObj.meta || {};
+      const title = meta.title || slug;
+      const members = objectToArray(rObj.members);
+      const wishes = objectToArray(rObj.wishes);
+      const bansMap = (rObj.bans && typeof rObj.bans === "object") ? rObj.bans : {};
+      const bansList = Object.entries(bansMap).map(([bKey, bVal]) => ({
+        key: bKey,
+        ...(typeof bVal === "object" && bVal !== null ? bVal : { username: bKey })
+      }));
+
+      const totalRoomPrice = wishes.reduce((sum, w) => {
+        const num = parseFloat(String(w.price || "").replace(/[^0-9.,]/g, "").replace(",", "."));
+        return sum + (isNaN(num) ? 0 : num);
+      }, 0);
+
+      body.innerHTML = `
+        <div class="modal-header">
+          <div>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <span class="observer-badge">Режим наблюдателя и полного контроля</span>
+              <span style="font-size:18px; font-weight:800;">${escapeHtml(title)}</span>
+              <span class="mono" style="color:var(--text-tertiary);">#${escapeHtml(slug)}</span>
+            </div>
+            <div style="font-size:12px; color:var(--text-secondary); margin-top:4px;">
+              Создатель: <strong>${escapeHtml(meta.ownerName || meta.ownerUsername || "—")}</strong> · Участников: ${members.length} · Желаний: ${wishes.length} · Сумма желаний: ~${totalRoomPrice.toLocaleString("ru-RU")}
+            </div>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button type="button" class="btn btn-sm" onclick="renderRoomObserverModal('${escapeHtml(slug)}', ${highlightUsername ? `'${escapeHtml(highlightUsername)}'` : "null"})">Обновить</button>
+            <button type="button" class="btn btn-sm" onclick="closeModal('roomObserverModal')">✕</button>
+          </div>
+        </div>
+
+        <div class="observer-banner">
+          <div style="font-size:12px; color:var(--text); line-height:1.45;">
+            Вы просматриваете комнату изнутри в режиме <strong>владельца сервиса</strong>: видны все участники, бронирования/дарения, чёрный список и доступна мгновенная модерация любого элемента.
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button type="button" class="btn btn-sm btn-danger" onclick="closeModal('roomObserverModal'); deleteRoomAsOwner('${escapeHtml(slug)}', '${escapeHtml(title)}')">Удалить комнату</button>
+          </div>
+        </div>
+
+        <!-- Room Meta Control -->
+        <div class="panel-card" style="margin-bottom:0;">
+          <div class="form-label">Управление параметрами комнаты</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+            <div class="form-group">
+              <label class="form-label">Название комнаты</label>
+              <input type="text" class="form-input" id="obsRoomTitle" value="${escapeHtml(title)}" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Описание</label>
+              <input type="text" class="form-input" id="obsRoomDesc" value="${escapeHtml(meta.description || "")}" />
+            </div>
+          </div>
+          <div style="display:flex; justify-content:flex-end;">
+            <button type="button" class="btn btn-sm btn-primary" onclick="saveRoomMetaAsOwner('${escapeHtml(slug)}')">Сохранить параметры комнаты</button>
+          </div>
+        </div>
+
+        <!-- Members in Room -->
+        <div>
+          <div class="form-label">Участники комнаты (${members.length})</div>
+          ${members.length === 0
+            ? `<div style="font-size:13px; color:var(--text-tertiary);">Участников нет</div>`
+            : members.map(m => {
+                const mUsername = m.username || "";
+                const mId = m.id || mUsername;
+                const isHighlighted = highlightUsername && mUsername === highlightUsername;
+                const mWishes = wishes.filter(w => (m.id && w.ownerId === m.id) || (mUsername && w.ownerId && w.ownerId.includes(`_${mUsername}_`)));
+                return `
+                  <div class="member-row-card" style="${isHighlighted ? "border-color:var(--blue); box-shadow:0 0 0 1px var(--blue);" : ""}">
+                    <div>
+                      <div style="font-weight:800; font-size:13px;">
+                        ${escapeHtml(m.displayName || mUsername || mId)}
+                        ${mUsername ? `<span class="mono" style="color:var(--text-tertiary);">@${escapeHtml(mUsername)}</span>` : ""}
+                        <span class="pill-mini pill-blue" style="margin-left:6px;">${escapeHtml(m.role || "member")}</span>
+                        ${isHighlighted ? `<span class="pill-mini pill-green" style="margin-left:4px;">Выбранный пользователь</span>` : ""}
+                      </div>
+                      <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;">
+                        Желаний в комнате: ${mWishes.length} · ID: <span class="mono">${escapeHtml(mId)}</span>
+                      </div>
+                    </div>
+                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                      ${mUsername ? `<button type="button" class="btn btn-sm" onclick="closeModal('roomObserverModal'); inspectUser('${escapeHtml(mUsername)}')">Профиль</button>` : ""}
+                      <button type="button" class="btn btn-sm btn-warn" onclick="banUserInRoomAsOwner('${escapeHtml(slug)}', '${escapeHtml(mId)}', '${escapeHtml(mUsername)}', '${escapeHtml(m.displayName || mUsername)}')">Бан в комнате</button>
+                      <button type="button" class="btn btn-sm btn-danger" onclick="kickUserFromRoomAsOwner('${escapeHtml(slug)}', '${escapeHtml(mUsername)}', '${escapeHtml(mId)}')">Исключить</button>
+                    </div>
+                  </div>
+                `;
+              }).join("")
+          }
+        </div>
+
+        <!-- Wishes in Room -->
+        <div>
+          <div class="form-label">Все желания в комнате (${wishes.length})</div>
+          ${wishes.length === 0
+            ? `<div style="font-size:13px; color:var(--text-tertiary);">В этой комнате пока нет желаний</div>`
+            : wishes.map(w => {
+                const ownerMatch = highlightUsername && w.ownerId && w.ownerId.includes(`_${highlightUsername}_`);
+                return `
+                  <div class="wish-row-card" style="${ownerMatch ? "border-color:var(--blue);" : ""}">
+                    <div style="min-width:0; flex:1;">
+                      <div style="font-weight:800; font-size:14px;">
+                        ${escapeHtml(w.title || "Без названия")}
+                        ${w.price ? `<span style="color:var(--text-secondary); font-weight:700;">· ${escapeHtml(w.price)}</span>` : ""}
+                        <span class="pill-mini ${w.fulfilled ? "pill-green" : (w.plannedBy ? "pill-amber" : "pill-blue")}" style="margin-left:6px;">
+                          ${w.fulfilled ? "Подарено" : (w.plannedBy ? "Запланировал: " + escapeHtml(w.plannedBy) : "Свободно")}
+                        </span>
+                      </div>
+                      <div style="font-size:11px; color:var(--text-tertiary); margin-top:3px;">
+                        Автор: <strong>${escapeHtml(w.ownerName || w.ownerId || "—")}</strong>
+                        ${w.category ? ` · Категория: ${escapeHtml(w.category)}` : ""}
+                        ${w.priority ? ` · Приоритет: ${escapeHtml(w.priority)}` : ""}
+                      </div>
+                      ${w.note ? `<div style="font-size:12px; color:var(--text-secondary); margin-top:4px;">${escapeHtml(w.note)}</div>` : ""}
+                      ${w.url ? `<div style="font-size:11px; margin-top:3px;"><a href="${escapeHtml(w.url)}" target="_blank" rel="noopener noreferrer" style="color:var(--blue);">Ссылка на товар ↗</a></div>` : ""}
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
+                      <button type="button" class="btn btn-sm ${w.fulfilled ? "btn-warn" : "btn-success"}" onclick="toggleWishFulfilledAsOwner('${escapeHtml(slug)}', '${escapeHtml(w.id)}', ${!Boolean(w.fulfilled)})">
+                        ${w.fulfilled ? "Снять «Подарено»" : "Отметить подаренным"}
+                      </button>
+                      ${w.plannedBy ? `<button type="button" class="btn btn-sm" onclick="clearWishPlanAsOwner('${escapeHtml(slug)}', '${escapeHtml(w.id)}')">Снять бронь</button>` : ""}
+                      <button type="button" class="btn btn-sm btn-danger" onclick="deleteWishInObserver('${escapeHtml(slug)}', '${escapeHtml(w.id)}', '${escapeHtml(w.title || w.id)}')">Удалить</button>
+                    </div>
+                  </div>
+                `;
+              }).join("")
+          }
+        </div>
+
+        <!-- Room Bans -->
+        <div>
+          <div class="form-label">Чёрный список комнаты (${bansList.length})</div>
+          ${bansList.length === 0
+            ? `<div style="font-size:12px; color:var(--text-tertiary);">Заблокированных в этой комнате нет</div>`
+            : bansList.map(b => `
+              <div class="member-row-card">
+                <div>
+                  <div style="font-weight:700; font-size:13px;">${escapeHtml(b.displayName || b.username || b.key)} <span class="mono" style="color:var(--text-tertiary);">@${escapeHtml(b.username || b.key)}</span></div>
+                  <div style="font-size:11px; color:var(--red);">Причина: ${escapeHtml(b.reason || "Не указана")}</div>
+                </div>
+                <button type="button" class="btn btn-sm btn-success" onclick="unbanUserInRoomAsOwner('${escapeHtml(slug)}', '${escapeHtml(b.key)}', '${escapeHtml(b.username || b.key)}')">Разбанить</button>
+              </div>
+            `).join("")
+          }
+        </div>
+      `;
+    }
+
+    async function saveRoomMetaAsOwner(slug) {
+      const titleInput = document.getElementById("obsRoomTitle");
+      const descInput = document.getElementById("obsRoomDesc");
+      if (!titleInput) return;
+      const patch = {
+        title: titleInput.value.trim() || slug,
+        description: descInput ? descInput.value.trim() : ""
+      };
+      await fetch(`${dbBase()}/rooms/${slug}/meta.json`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch)
+      });
+      await writeAuditLog("room_meta_updated", `Обновлены параметры комнаты #${slug} (${patch.title})`, slug);
+      await refreshAllData(false);
+      renderRoomObserverModal(slug);
+      showToast("Параметры комнаты сохранены");
+    }
+
+    async function toggleWishFulfilledAsOwner(slug, wishId, fulfilledState) {
+      await fetch(`${dbBase()}/rooms/${slug}/wishes/${wishId}.json`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fulfilled: Boolean(fulfilledState), fulfilledAt: fulfilledState ? Date.now() : null })
+      });
+      await writeAuditLog("wish_fulfilled_toggle", `Изменён статус подарка ${wishId} -> ${fulfilledState ? "подарено" : "актуально"} в #${slug}`, wishId);
+      await refreshAllData(false);
+      renderRoomObserverModal(slug);
+      showToast(fulfilledState ? "Отмечено как подаренное" : "Статус подарка снят");
+    }
+
+    async function clearWishPlanAsOwner(slug, wishId) {
+      await fetch(`${dbBase()}/rooms/${slug}/wishes/${wishId}.json`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plannedBy: null, plannedByName: null })
+      });
+      await writeAuditLog("wish_unplanned", `Снята бронь/планирование с желания ${wishId} в #${slug}`, wishId);
+      await refreshAllData(false);
+      renderRoomObserverModal(slug);
+      showToast("Бронирование снято");
+    }
+
+    async function deleteWishInObserver(slug, wishId, title) {
+      if (!confirm(`Удалить желание «${title}» из комнаты #${slug}?`)) return;
+      await fetch(`${dbBase()}/rooms/${slug}/wishes/${wishId}.json`, { method: "DELETE" });
+      await writeAuditLog("wish_deleted", `Удалено желание «${title}» (${wishId}) в комнате #${slug}`, wishId);
+      await refreshAllData(false);
+      renderRoomObserverModal(slug);
+      showToast("Желание удалено");
+    }
+
+    async function banUserInRoomAsOwner(slug, memberId, username, displayName) {
+      const reason = prompt(`Причина бана в комнате #${slug} для ${displayName || username || memberId}:`, "Нарушение правил комнаты") || "Заблокирован владельцем";
+      const banKey = memberId || username;
+      if (!banKey) return;
+
+      await fetch(`${dbBase()}/rooms/${slug}/bans/${banKey}.json`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: memberId || banKey,
+          username: username || banKey,
+          displayName: displayName || username || banKey,
+          reason,
+          bannedAt: Date.now(),
+          bannedByOwner: true
+        })
+      });
+
+      if (memberId && adminState.roomsMap[slug] && adminState.roomsMap[slug].members && adminState.roomsMap[slug].members[memberId]) {
+        await fetch(`${dbBase()}/rooms/${slug}/members/${memberId}.json`, { method: "DELETE" });
+      }
+      if (username) {
+        await fetch(`${dbBase()}/users/${username}/rooms/${slug}.json`, { method: "DELETE" });
+      }
+
+      await writeAuditLog("room_user_banned", `Пользователь @${username || banKey} забанен в комнате #${slug}. Причина: ${reason}`, username || banKey);
+      await refreshAllData(false);
+      renderRoomObserverModal(slug);
+      showToast("Пользователь забанен в комнате");
+    }
+
+    async function unbanUserInRoomAsOwner(slug, banKey, username) {
+      await fetch(`${dbBase()}/rooms/${slug}/bans/${banKey}.json`, { method: "DELETE" });
+      if (username && username !== banKey) {
+        await fetch(`${dbBase()}/rooms/${slug}/bans/${username}.json`, { method: "DELETE" });
+      }
+      await writeAuditLog("room_user_unbanned", `Снят бан в комнате #${slug} с @${username || banKey}`, username || banKey);
+      await refreshAllData(false);
+      renderRoomObserverModal(slug);
+      showToast("Бан в комнате снят");
+    }
+
+    async function kickUserFromRoomAsOwner(slug, username, memberId) {
+      if (!confirm(`Исключить @${username || memberId} из комнаты #${slug}?`)) return;
+      const rObj = adminState.roomsMap[slug];
+      if (rObj && rObj.members) {
+        if (memberId && rObj.members[memberId]) {
+          await fetch(`${dbBase()}/rooms/${slug}/members/${memberId}.json`, { method: "DELETE" });
+        }
+        Object.entries(rObj.members).forEach(async ([mKey, mVal]) => {
+          if (mVal && username && mVal.username === username) {
+            await fetch(`${dbBase()}/rooms/${slug}/members/${mKey}.json`, { method: "DELETE" });
+          }
+        });
+      }
+      if (username) {
+        await fetch(`${dbBase()}/users/${username}/rooms/${slug}.json`, { method: "DELETE" });
+      }
+      await writeAuditLog("room_user_kicked", `Пользователь @${username || memberId} исключён из комнаты #${slug}`, username || memberId);
+      await refreshAllData(false);
+      if (document.getElementById("roomObserverModal").classList.contains("open")) {
+        renderRoomObserverModal(slug);
+      }
+      showToast("Пользователь исключён из комнаты");
+    }
+
+    async function deleteSingleWishAsOwner(roomSlug, wishId, username) {
+      let targetSlug = roomSlug;
+      if (!targetSlug || !(adminState.roomsMap[targetSlug] && adminState.roomsMap[targetSlug].wishes && adminState.roomsMap[targetSlug].wishes[wishId])) {
+        targetSlug = null;
+        Object.entries(adminState.roomsMap || {}).forEach(([slug, rObj]) => {
+          if (rObj && rObj.wishes && rObj.wishes[wishId]) {
+            targetSlug = slug;
+          }
+        });
+      }
+      if (!targetSlug) {
+        showToast("Желание не найдено в комнатах");
+        return;
+      }
+      await fetch(`${dbBase()}/rooms/${targetSlug}/wishes/${wishId}.json`, { method: "DELETE" });
+      await writeAuditLog("wish_deleted", `Удалено желание ${wishId} пользователя @${username} в комнате ${targetSlug}`, wishId);
+      await refreshAllData(false);
+      showToast("Желание удалено");
+    }
+
+    function openEditUserModal(username) {
+      const raw = adminState.usersMap[username];
+      if (!raw) return;
+      document.getElementById("editUserTitle").textContent = `Редактирование @${username}`;
+      document.getElementById("editUserUsername").value = username;
+      document.getElementById("editUserDisplayName").value = raw.displayName || username;
+      document.getElementById("editUserBio").value = raw.bio || "";
+      document.getElementById("editUserClothes").value = raw.clothesSize || "";
+      document.getElementById("editUserShoes").value = raw.shoeSize || "";
+      document.getElementById("editUserRing").value = raw.ringSize || "";
+      openModal("editUserModal");
+    }
+
+    async function saveEditedUser(event) {
+      event.preventDefault();
+      const username = document.getElementById("editUserUsername").value;
+      const raw = adminState.usersMap[username];
+      if (!raw) return;
+
+      const patch = {
+        displayName: document.getElementById("editUserDisplayName").value.trim() || username,
+        bio: document.getElementById("editUserBio").value.trim(),
+        clothesSize: document.getElementById("editUserClothes").value.trim(),
+        shoeSize: document.getElementById("editUserShoes").value.trim(),
+        ringSize: document.getElementById("editUserRing").value.trim()
+      };
+
+      await fetch(`${dbBase()}/users/${username}.json`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch)
+      });
+
+      if (raw.id) {
+        for (const [slug, rObj] of Object.entries(adminState.roomsMap || {})) {
+          if (rObj && rObj.members && rObj.members[raw.id]) {
+            await fetch(`${dbBase()}/rooms/${slug}/members/${raw.id}.json`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(patch)
+            });
+          }
+        }
+      }
+
+      await writeAuditLog("user_updated", `Обновлён профиль @${username}`, username);
+      closeModal("editUserModal");
+      await refreshAllData(false);
+      showToast("Профиль пользователя обновлён");
+    }
+
+    function openBanReasonModal(username) {
+      document.getElementById("banTargetUsername").value = username;
+      document.getElementById("banReasonInput").value = "";
+      document.getElementById("banModalTitle").textContent = `Блокировка @${username}`;
+      openModal("banReasonModal");
+    }
+
+    async function confirmBanUser() {
+      const username = document.getElementById("banTargetUsername").value;
+      const reason = document.getElementById("banReasonInput").value.trim() || "Заблокирован владельцем сервиса";
+      const raw = adminState.usersMap[username];
+      if (!raw) return;
+
+      const patch = {
+        suspended: true,
+        banReason: reason,
+        suspendedAt: Date.now()
+      };
+
+      await fetch(`${dbBase()}/users/${username}.json`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch)
+      });
+
+      const banRecord = {
+        id: raw.id || username,
+        username,
+        displayName: raw.displayName || username,
+        reason,
+        bannedAt: Date.now(),
+        bannedByOwner: true
+      };
+
+      for (const [slug, rObj] of Object.entries(adminState.roomsMap || {})) {
+        const members = objectToArray(rObj && rObj.members);
+        const inRoom = members.some(m => (raw.id && m.id === raw.id) || m.username === username);
+        if (inRoom) {
+          await fetch(`${dbBase()}/rooms/${slug}/bans/${raw.id || username}.json`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(banRecord)
+          });
+        }
+      }
+
+      await writeAuditLog("user_banned", `Заблокирован аккаунт @${username}. Причина: ${reason}`, username);
+      closeModal("banReasonModal");
+      await refreshAllData(false);
+      showToast(`Пользователь @${username} заблокирован`);
+    }
+
+    async function unblockUserGlobal(username) {
+      const raw = adminState.usersMap[username];
+      if (!raw) return;
+
+      await fetch(`${dbBase()}/users/${username}.json`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ suspended: false, banReason: "", suspendedAt: null })
+      });
+
+      for (const [slug, rObj] of Object.entries(adminState.roomsMap || {})) {
+        if (rObj && rObj.bans) {
+          if (raw.id && rObj.bans[raw.id]) {
+            await fetch(`${dbBase()}/rooms/${slug}/bans/${raw.id}.json`, { method: "DELETE" });
+          }
+          if (rObj.bans[username]) {
+            await fetch(`${dbBase()}/rooms/${slug}/bans/${username}.json`, { method: "DELETE" });
+          }
+        }
+      }
+
+      await writeAuditLog("user_unbanned", `Снята блокировка с аккаунта @${username}`, username);
+      await refreshAllData(false);
+      showToast(`Пользователь @${username} разблокирован`);
+    }
+
+    async function deleteUserGlobal(username) {
+      if (!confirm(`Безвозвратно удалить аккаунт @${username} из /users?`)) return;
+      const raw = adminState.usersMap[username];
+
+      await fetch(`${dbBase()}/users/${username}.json`, { method: "DELETE" });
+
+      if (raw && raw.id) {
+        for (const [slug, rObj] of Object.entries(adminState.roomsMap || {})) {
+          if (rObj && rObj.members && rObj.members[raw.id]) {
+            await fetch(`${dbBase()}/rooms/${slug}/members/${raw.id}.json`, { method: "DELETE" });
+          }
+        }
+      }
+
+      await writeAuditLog("user_deleted", `Удалён аккаунт @${username}`, username);
+      await refreshAllData(false);
+      showToast(`Аккаунт @${username} удалён`);
+    }
+
+    async function deleteRoomAsOwner(slug, title) {
+      if (!confirm(`Удалить комнату «${title}» (#${slug}) из базы данных?`)) return;
+
+      const rObj = adminState.roomsMap[slug];
+      const members = objectToArray(rObj && rObj.members);
+
+      await fetch(`${dbBase()}/rooms/${slug}.json`, { method: "DELETE" });
+
+      for (const m of members) {
+        if (m.username) {
+          await fetch(`${dbBase()}/users/${m.username}/rooms/${slug}.json`, { method: "DELETE" });
+        }
+      }
+
+      await writeAuditLog("room_deleted", `Удалена комната «${title}» (#${slug})`, slug);
+      await refreshAllData(false);
+      showToast(`Комната #${slug} удалена`);
+    }
+
+    async function clearAuditLogs() {
+      if (!confirm("Очистить журнал действий администратора?")) return;
+      await fetch(`${dbBase()}/systemAdmin/auditLogs.json`, { method: "DELETE" });
+      await refreshAllData(false);
+      showToast("Журнал очищен");
+    }
+
+    function exportSystemSnapshot() {
+      const snapshot = {
+        exportedAt: new Date().toISOString(),
+        dbUrl: dbBase(),
+        users: adminState.usersMap,
+        rooms: adminState.roomsMap,
+        auditLogs: adminState.auditLogs
+      };
+      const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `wishlist-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast("Бэкап сохранён в JSON");
+    }
+
+    (function initAdminConsole() {
+      try {
+        const savedTheme = localStorage.getItem("wl_owner_theme");
+        if (savedTheme === "light" || savedTheme === "dark") {
+          document.documentElement.setAttribute("data-theme", savedTheme);
+        }
+      } catch (e) {}
+      document.getElementById("gateDbUrl").value = adminState.dbUrl;
+      document.getElementById("gateUsername").value = adminState.ownerName;
+
+      if (adminState.unlocked) {
+        enterConsole();
+      }
+    })();
+  </script>
+</body>
+</html>
